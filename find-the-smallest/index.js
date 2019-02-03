@@ -18,11 +18,22 @@ function smallest(n) {
     params.onlySameNumberIfZeros = params.hasMultipleZeroAfterFirst;
 
     for (let i = 0; i < params.numberAsArray.length; i++) {
-        if (i > 0 && params.firstIsHighest && params.numberAsArray[0] < params.numberAsArray[i]) {
-            params.firstIsHighest = false;
-        }
         if (i > 0) {
+            if (params.firstIsHighest && params.numberAsArray[0] < params.numberAsArray[i]) {
+                params.firstIsHighest = false;
+            }
             params.firstHasSiblings = params.firstHasSiblings || params.numberAsArray[0] === params.numberAsArray[i];
+
+            if (params.hasZeroAfterFirst) {
+                if (!params.firstWithZeroPositionToGoTo && params.numberAsArray[i] !== 0) {
+                    if (params.numberAsArray[0] <= params.numberAsArray[i]) {
+                        params.firstWithZeroPositionToGoTo = i - 1;
+                    }
+                }
+            }
+            if (params.onlyZerosAfterFirst) {
+                params.onlyZerosAfterFirst = params.onlyZerosAfterFirst && params.numberAsArray[i] === 0;
+            }
         }
         if (params.numberAsArray[i] === 0) {
             params.lastZero = i;
@@ -39,9 +50,6 @@ function smallest(n) {
                 params.lowest = params.numberAsArray[i];
                 params.lowestIndex = i;
             }
-        }
-        if (i > 0 && params.onlyZerosAfterFirst) {
-            params.onlyZerosAfterFirst = params.onlyZerosAfterFirst && params.numberAsArray[i] === 0;
         }
         if (params.hasMultipleZeroAfterFirst) {
             if (params.numberAsArray[0] < params.numberAsArray[i]) {
@@ -90,12 +98,11 @@ function smallest(n) {
             }
         }
     } else if (params.hasZero) {
-        if (params.hasZeroAfterFirst && params.lastZero === 1) {
+        if (params.hasZeroAfterFirst && params.numberAsArray[0] <= params.numberAsArray[2] && params.firstWithZeroPositionToGoTo !== -1) {
             const number = params.numberAsArray.splice(0, 1);
-            const newIndex = new RegExp(`[${number}-9]`).exec(params.numberAsString.substr(1));
-            params.numberAsArray.splice(newIndex.index, 0, number);
+            params.numberAsArray.splice(params.firstWithZeroPositionToGoTo, 0, number);
             const newNumber = params.numberAsArray.join('');
-            return [+newNumber, 0, newIndex.index];
+            return [+newNumber, 0,params.firstWithZeroPositionToGoTo];
         }
         const toReturn = [];
         //check if we have other same value before
