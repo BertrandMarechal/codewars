@@ -1,3 +1,6 @@
+// https://www.codewars.com/kata/a-chain-adding-function/train/typescript
+
+// using https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Object/valueOf
 export default function add(x: number): any {
     const fn = (n: number) => add(n + x);
     fn.valueOf = () => x;
