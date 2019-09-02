@@ -211,16 +211,12 @@ function sudoku(puzzle) {
         }
         if (somethingChanged) {
             _isDone();
-            // for (let i = 0; i < 9 && somethingChanged; i++) {
-            //     for (let j = 0; j < 9 && somethingChanged; j++) {
-            //         if (peuzeule.cells[i][j].value !== 0) {
-            //             if (expected[i][j] !== peuzeule.cells[i][j].value) {
-            //                 somethingChanged = false;
-            //                 _logGrid();
-            //             }
-            //         }
-            //     }
-            // }
+        } else {
+            // we are in a situation where the case is a bit more complicated.
+            // we have to loop on the numbers and blocs, and get the available spaces, based on the other surrounding occurences of this number
+            for (let i = 1; i < 10; i++) {
+
+            }
         }
     }
     _logGrid();
@@ -258,15 +254,15 @@ function sudoku(puzzle) {
 const time = new Date().getTime();
 
 sudoku(p);
-// console.log(sudoku([
-//     [3, 0, 5, 0, 0, 0, 4, 0, 1],
-//     [0, 1, 0, 0, 0, 0, 0, 9, 0],
-//     [0, 4, 0, 1, 3, 6, 0, 8, 0],
-//     [0, 2, 7, 0, 8, 0, 3, 6, 0],
-//     [4, 0, 0, 0, 5, 0, 0, 0, 8],
-//     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-//     [1, 0, 0, 0, 4, 0, 0, 0, 9],
-//     [0, 0, 0, 0, 0, 0, 0, 0, 0],
-//     [0, 5, 9, 3, 0, 8, 2, 4, 0],
-// ]));
+console.log(sudoku([
+    [3, 0, 5, 0, 0, 0, 4, 0, 1],
+    [0, 1, 0, 0, 0, 0, 0, 9, 0],
+    [0, 4, 0, 1, 3, 6, 0, 8, 0],
+    [0, 2, 7, 0, 8, 0, 3, 6, 0],
+    [4, 0, 0, 0, 5, 0, 0, 0, 8],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 4, 0, 0, 0, 9],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 5, 9, 3, 0, 8, 2, 4, 0],
+]));
 console.log(`${new Date().getTime() - time} ms`);
