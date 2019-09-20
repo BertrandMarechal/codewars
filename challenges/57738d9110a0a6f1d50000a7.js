@@ -1,5 +1,6 @@
 // https://www.codewars.com/kata/57738d9110a0a6f1d50000a7/train/javascript
 function linkUp(gamemap) {
+    const startTime = new Date().getTime();
     const tries = [];
     let currentTryIndex = -1;
     const addToTryTree = () => {
@@ -10,11 +11,15 @@ function linkUp(gamemap) {
             gameMapArray: gameMapArr.map(line => line.join(' ')).join('\n'),
             toReturnArray: [...toReturn.map(option => [...option])]
         });
-        console.log('addToTryTree', currentTryIndex, currentTryIndex > 0 ? tries[currentTryIndex - 1].options.length : 0);
+        // console.log('addToTryTree', currentTryIndex, currentTryIndex > 0 ? tries[currentTryIndex - 1].options.length : 0);
     }
     const addOptionToTry = (option) => {
-        // console.log('addOptionToTry', currentTryIndex, tries[currentTryIndex].options.length, option);
-        tries[currentTryIndex].options.push(option);
+        if (!tries[currentTryIndex].options.some(x =>
+            x.map(y => y.join('-')).join(',') === option.map(y => y.join('-')).join(',')
+        )) {
+            // console.log('addOptionToTry', currentTryIndex, tries[currentTryIndex].options.length, option);
+            tries[currentTryIndex].options.push(option);
+        }
     }
     const nextTry = () => {
         tries[currentTryIndex].i++;
@@ -30,7 +35,7 @@ function linkUp(gamemap) {
         gameMapArr = tries[currentTryIndex].gameMapArray.split('\n').map(x => x.split(' '));;
         toReturn = tries[currentTryIndex].toReturnArray;
         generateFlattened();
-        console.log('nextTry', currentTryIndex, tries[currentTryIndex].i);
+        // console.log('nextTry', currentTryIndex, tries[currentTryIndex].i);
         return true;
     }
 
@@ -76,6 +81,13 @@ function linkUp(gamemap) {
     const checlImmediateNeighbours = (from, to) => {
         return (from[0] === to[0] && Math.abs(from[1] - to[1]) === 1) || (from[1] === to[1] && Math.abs(from[0] - to[0]) === 1);
     }
+    const hasOnlyNeighbours = (coord) => {
+        const toCheck = gameMapArr[coord[0] + 1][coord[1]] +
+            gameMapArr[coord[0] - 1][coord[1]] +
+            gameMapArr[coord[0]][coord[1 + 1]] +
+            gameMapArr[coord[0]][coord[1 - 1]];
+        return toCheck.length === 4;
+    }
     const checkOneLine = (from, to) => {
         if (from[0] !== to[0] && from[1] !== to[1]) {
             return false;
@@ -83,15 +95,15 @@ function linkUp(gamemap) {
         const indexToCheck = from[0] === to[0] ? 1 : 0;
         const min = Math.min(from[indexToCheck], to[indexToCheck]) + 1;
         const max = Math.min(from[indexToCheck], to[indexToCheck]) - 1;
-        if (indexToCheck === 1) {
-            if (from[0] === 1 || from[0] === gameMapArr.length - 2) {
-                return true;
-            }
-        } else {
-            if (from[1] === 1 || from[1] === gameMapArr.length - 2) {
-                return true;
-            }
-        }
+        // if (indexToCheck === 1) {
+        //     if (from[0] === 1 || from[0] === gameMapArr.length - 2) {
+        //         return true;
+        //     }
+        // } else {
+        //     if (from[1] === 1 || from[1] === gameMapArr.length - 2) {
+        //         return true;
+        //     }
+        // }
         const path = indexToCheck === 1 ?
             gameMapArr[from[0]].slice(min, max) :
             gameMapArr.map(line => line[from[1]]).slice(min, max);
@@ -113,25 +125,36 @@ function linkUp(gamemap) {
         const maxR = Math.max(from[0], to[0]);
         const minC = Math.min(from[1], to[1]);
         const maxC = Math.max(from[1], to[1]);
-        const paths = [[], [], [], []];
+        const paths = [0, 0, 0, 0];
         const fromOrToIsA =
             (minR === from[0] && minC === from[1]) ||
             (minR === to[0] && minC === to[1]);
 
-        for (let i = minR; i < maxR + 1; i++) {
-            paths[0].push(gameMapArr[i][minC]);
-            paths[1].push(gameMapArr[i][maxC]);
+        let carryOn = true;
+        for (let i = minR; i < maxR + 1 && carryOn; i++) {
+            if (gameMapArr[i][minC]) {
+                paths[0]++;
+            }
+            if (gameMapArr[i][maxC]) {
+                paths[1]++;
+            }
+            carryOn = paths[0] < 2 && paths[1] < 2;
         }
-        for (let i = minC; i < maxC + 1; i++) {
-            paths[2].push(gameMapArr[minR][i]);
-            paths[3].push(gameMapArr[maxR][i]);
+        for (let i = minC; i < maxC + 1 && carryOn; i++) {
+            if (gameMapArr[minR][i]) {
+                paths[2]++;
+            }
+            if (gameMapArr[maxR][i]) {
+                paths[3]++;
+            }
+            carryOn = paths[2] < 2 && paths[3] < 2;
         }
         if (fromOrToIsA) {
-            return (paths[2].filter(x => !!x).length === 1 && paths[1].filter(x => !!x).length === 1) ||
-                (paths[0].filter(x => !!x).length === 1 && paths[3].filter(x => !!x).length === 1)
+            return (paths[2] === 1 && paths[1] === 1) ||
+                (paths[0] === 1 && paths[3] === 1)
         } else {
-            return (paths[0].filter(x => !!x).length === 1 && paths[2].filter(x => !!x).length === 1) ||
-                (paths[1].filter(x => !!x).length === 1 && paths[3].filter(x => !!x).length === 1)
+            return (paths[0] === 1 && paths[2] === 1) ||
+                (paths[1] === 1 && paths[3] === 1)
         }
     }
 
@@ -160,51 +183,50 @@ function linkUp(gamemap) {
         ---2---
         */
         // loop on Xs to try and get a path that works
+        let minLine = gameMapArr[minR];
+        let maxLine = gameMapArr[maxR];
         for (let i = 0; i < 10 && !found; i++) {
             if (i !== minC && i !== maxC) {
                 // we only care about what's not 2 lines
                 path[0] = gameMapArr.map(x => x[i]).slice(minR, maxR + 1).filter(x => !!x);
                 if (!path[0].length) {
                     // we can carry on
-                    path[1] = gameMapArr[minR].slice(
+                    path[1] = minLine.slice(
                         Math.min(fromOrToIsA ? minC : maxC, i),
                         Math.max(fromOrToIsA ? minC : maxC, i) + 1
-                    );
-                    path[2] = gameMapArr[maxR].slice(
-                        Math.min(fromOrToIsA ? maxC : minC, i),
-                        Math.max(fromOrToIsA ? maxC : minC, i) + 1
-                    );
-                    // console.log('X', fromOrToIsA, letter, i, JSON.stringify(path));
-
-                    path[1] = path[1].filter(x => !!x);
-                    path[2] = path[2].filter(x => !!x);
-                    // if the length is 2, then we are just talking about our 2 ends
-                    if (path[1].length === 1 && path[2].length === 1) {
-                        found = path[1].filter(x => letter === x).length === 1 && path[2].filter(x => letter === x).length === 1;
+                    ).join('');
+                    if (path[1] === letter) {
+                        path[2] = maxLine.slice(
+                            Math.min(fromOrToIsA ? maxC : minC, i),
+                            Math.max(fromOrToIsA ? maxC : minC, i) + 1
+                        ).join('');
+                        found = path[2] === letter;
                     }
                 }
             }
         }
         // loop on Ys to try and get a path that works
-        for (let i = 0; i < 10 && !found; i++) {
-            if (i !== minR && i !== maxR) {
-                // we only care about what's not 2 lines
-                path[0] = gameMapArr[i].slice(minC, maxC + 1).filter(x => !!x);
-                if (!path[0].length) {
-                    // we can carry on
-                    path[1] = gameMapArr.map(x => x[minC]).slice(
-                        Math.min(fromOrToIsA ? minR : maxR, i),
-                        Math.max(fromOrToIsA ? minR : maxR, i) + 1
-                    );
-                    path[2] = gameMapArr.map(x => x[maxC]).slice(
-                        Math.min(fromOrToIsA ? maxR : minR, i),
-                        Math.max(fromOrToIsA ? maxR : minR, i) + 1
-                    );
-                    // console.log('Y', fromOrToIsA, letter, i, JSON.stringify(path));
-                    path[1] = path[1].filter(x => !!x);
-                    path[2] = path[2].filter(x => !!x);
-                    // if the length is 2, then we are just talking about our 2 ends
-                    found = path[1].length === 1 && path[2].length === 1;
+        if (!found) {
+            minLine = gameMapArr.map(x => x[minC]);
+            maxLine = gameMapArr.map(x => x[maxC]);
+            for (let i = 0; i < 10 && !found; i++) {
+                if (i !== minR && i !== maxR) {
+                    // we only care about what's not 2 lines
+                    path[0] = gameMapArr[i].slice(minC, maxC + 1).filter(x => !!x);
+                    if (!path[0].length) {
+                        // we can carry on
+                        path[1] = minLine.slice(
+                            Math.min(fromOrToIsA ? minR : maxR, i),
+                            Math.max(fromOrToIsA ? minR : maxR, i) + 1
+                        ).join('');
+                        if (path[1] === letter) {
+                            path[2] = maxLine.slice(
+                                Math.min(fromOrToIsA ? maxR : minR, i),
+                                Math.max(fromOrToIsA ? maxR : minR, i) + 1
+                            ).join('');
+                            found = path[2] === letter;
+                        }
+                    }
                 }
             }
         }
@@ -212,7 +234,7 @@ function linkUp(gamemap) {
     }
     addToTryTree();
     let flattened;
-    generateFlattened();
+    // generateFlattened();
     while (!isOk) {
         //coding here...
         let changed = true;
@@ -229,14 +251,10 @@ function linkUp(gamemap) {
                         const otherCord = flattened[key][k];
                         let keyChanged = false;
                         keyChanged = checlImmediateNeighbours(coord, otherCord);
-                        if (!keyChanged) {
-                            keyChanged = checkOneLine(coord, otherCord);
-                        }
-                        if (!keyChanged) {
-                            keyChanged = checkTwoLines(coord, otherCord);
-                        }
-                        if (!keyChanged) {
-                            keyChanged = checkThreeLines(coord, otherCord, gameMapArr[coord[0]][coord[1]]);
+                        if (!keyChanged && !hasOnlyNeighbours(coord)) {
+                            keyChanged = checkOneLine(coord, otherCord) ||
+                                checkThreeLines(coord, otherCord, gameMapArr[coord[0]][coord[1]]) ||
+                                checkTwoLines(coord, otherCord);
                         }
                         if (keyChanged) {
                             addOptionToTry([coord.map(x => x - 1), otherCord.map(x => x - 1)]);
@@ -272,6 +290,7 @@ function linkUp(gamemap) {
             isOk = !gameMapArr.map(line => line.join('')).join('');
             if (isOk) {
                 // console.log(gameMapArr.map((line) => line.map(cell => cell || '_').join('-')).join('\n'));
+                console.log(new Date().getTime() - startTime);
                 return toReturn;
             }
         }
